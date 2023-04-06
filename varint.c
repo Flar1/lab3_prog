@@ -57,37 +57,38 @@ uint32_t generate_number()
 }
 int main()
 {
-    uint8_t buf[4000000] = {};
     size_t size = 0;
-    uint8_t compresed[1000000];
-    uint8_t *cur = compresed;
     FILE *fp;
-    // // fp = fopen("uncompressed.dat","wb");
-    // // for (int i = 0; i < 1000000;i++)
-    // // {
-    // //     uint32_t number = generate_number();
-    // //     for (int j = 0; j<1; j++){
-    // //         compresed[i] = number;
-    // //         fwrite(&number,sizeof(int),1,fp);
-    // //     }
-    // // }
-    // fclose(fp);
-    fp = fopen("uncompressed.dat","wb");
+    FILE *unfp;
+    fp = fopen("compressed.dat","wb");
+    unfp = fopen("uncompressed.dat","wb");
     for (int i = 0; i < 1000000; i++)
     {
         uint32_t number = generate_number();
-        fwrite(&number,sizeof(int),1,fp);
+        fwrite(&number,sizeof(uint32_t),1,unfp);
+        uint8_t buf[4];
         size = encode_varint(number,buf);
-        for (int j = 0 ; j < size; j++)
+        fwrite(buf,sizeof(uint8_t),size,fp);
+        const uint8_t *cur_uncomp = buf;
+        uint32_t value = decode_varint(&cur_uncomp);
+        if (value != number)
         {
-            *cur = buf[j];
-            cur++;
+            printf("ERROR");
         }
     }
-    const uint8_t *cur_comp = compresed;
-    while(cur_comp < compresed + 7)
+    fclose(fp);
+    fclose(unfp);
+    FILE *fpcomp = fopen("compressed.dat","rb");
+    fseek(fpcomp,0,SEEK_END);
+    long int count = ftell(fp);
+    fseek(fpcomp,0,SEEK_SET);
+    while ((feof(fpcomp)) == 0)
     {
-        printf("%d\n",decode_varint(&cur_comp));
+        uint8_t compressed[4];
+        fread(compressed,sizeof(uint8_t),1,fpcomp);
+        const uint8_t *curcomp = compressed;
+        uint32_t value = decode_varint(&curcomp);
     }
+    fclose(fpcomp);
     return 0;
 }
