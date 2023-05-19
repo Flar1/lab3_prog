@@ -67,9 +67,10 @@ int main()
     FILE *unfp;
     fp = fopen("compressed.dat", "wb");
     unfp = fopen("uncompressed.dat", "wb");
-    for (int i = 0; i < 1000000; i++)
+    for (int i = 0; i < 10; i++)
     {
         uint32_t number = generate_number();
+        printf("d- %d\n", number);
         fwrite(&number, sizeof(uint32_t), 1, unfp);
         uint8_t buf[4];
         size = encode_varint(number, buf);
@@ -87,12 +88,13 @@ int main()
     fseek(fpcomp, 0, SEEK_END);
     long int count = ftell(fpcomp);
     fseek(fpcomp, 0, SEEK_SET);
-    while ((ftell(fpcomp)) != count)
+    uint8_t compressed[2000000];
+    fread(compressed, sizeof(uint8_t), count, fpcomp);
+    const uint8_t *curcomp = compressed;
+    while (curcomp < compressed + count)
     {
-        uint8_t compressed[4];
-        fread(compressed, sizeof(uint8_t), 1, fpcomp);
-        const uint8_t *curcomp = compressed;
         uint32_t value = decode_varint(&curcomp);
+        printf("v- %d\n", value);
     }
     fclose(fpcomp);
     return 0;
